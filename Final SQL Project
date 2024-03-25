@@ -1,0 +1,218 @@
+##Below is my final SQL project for my certificate program!
+##The first 14 queries are suggested by the program, but I've written up an extra 6 queries from my own analysis
+
+##1. Show Customers (their full names, customer ID, and country) who are not in the US.
+SELECT CustomerId
+,FirstName
+,LastName
+,Country
+FROM customers
+WHERE Country <> "USA"
+;
+
+##2. Show only the Customers from Brazil.
+SELECT CustomerId
+,FirstName
+,LastName
+,Country
+FROM customers
+WHERE Country = "Brazil"
+;
+
+##3. Find the Invoices of customers who are from Brazil. The resulting table should show the customer's full name, Invoice ID, Date of the invoice, and billing country.
+SELECT inv.Invoiceid, DATE(inv.InvoiceDate), inv.BillingCountry, cust.FirstName, cust.LastName
+FROM invoices inv
+
+LEFT JOIN customers cust
+ON inv.CustomerId = cust.CustomerId
+
+WHERE cust.Country = "Brazil"
+;
+
+##4. Show the Employees who are Sales Agents.
+SELECT FirstName, LastName, Title
+FROM employees
+WHERE Title LIKE 'Sales%Agent%'
+;
+
+##5. Find a unique/distinct list of billing countries from the Invoice table.
+SELECT DISTINCT BillingCountry
+FROM invoices
+ORDER BY BillingCountry
+;
+
+##6. Provide a query that shows the invoices associated with each sales agent.
+SELECT emp.FirstName First, emp.LastName Last, ROUND(SUM(inv.Total)) TotalInv
+FROM employees emp
+
+LEFT JOIN customers cust
+ON emp.Employeeid = cust.SupportRepid
+
+INNER JOIN invoices inv
+ON cust.CustomerId = inv.CustomerId
+
+WHERE emp.Title = "Sales Support Agent"
+GROUP BY Last
+;
+
+##7.Show the Invoice Total, Customer name, Country, and Sales Agent name for all invoices and customers.
+SELECT (cust.FirstName||" "||cust.LastName) customername
+,cust.Country country
+,SUM(inv.Total) total
+,(emp.FirstName||" "||emp.LastName) AS agentname
+FROM invoices inv
+
+LEFT JOIN customers cust
+ON inv.CustomerId=cust.CustomerId
+
+JOIN employees emp
+ON cust.SupportRepid=emp.Employeeid  
+
+GROUP BY customername
+;
+
+##8. How many Invoices were there in 2009?
+SELECT COUNT(InvoiceId) num_of_invoices
+FROM invoices
+WHERE InvoiceDate LIKE '2009%'
+;
+
+##9. What are the total sales for 2009?
+SELECT ROUND(SUM(Total),2) totalSale
+FROM invoices
+WHERE InvoiceDate LIKE '2009%'
+;
+
+##10. Write a query that includes the purchased track name with each invoice line ID.
+SELECT invt.InvoiceLineId, tr.Name
+FROM invoice_items invt
+
+LEFT JOIN tracks tr
+ON invt.TrackId=tr.TrackId
+
+ORDER BY invt.InvoiceLineId
+;
+
+
+##11. Write a query that includes the purchased track name AND artist name with each invoice line ID.
+SELECT invt.InvoiceLineId invoiceid, tr.Name track, ar.Name artist
+FROM invoice_items invt
+
+LEFT JOIN tracks tr
+ON invt.TrackId=tr.TrackId
+
+JOIN albums al
+ON tr.AlbumId=al.AlbumId
+
+JOIN artists ar
+ON al.ArtistId=ar.ArtistId
+
+ORDER BY invoiceid
+;
+
+##12. Provide a query that shows all the Tracks, and include the Album name, Media type, and Genre.
+SELECT tr.Name track
+,al.Title album
+,mt.Name type
+,g.Name genre
+FROM tracks tr
+
+LEFT JOIN albums al
+ON tr.AlbumId=al.AlbumId
+
+LEFT JOIN media_types mt
+ON tr.MediaTypeId=mt.MediaTypeId
+
+LEFT JOIN genres g
+ON tr.GenreId=g.GenreId
+;
+
+
+##13.Show the total sales made by each sales agent.
+SELECT (emp.FirstName||" "||emp.LastName) AS agentname
+,ROUND(SUM(inv.Total),2) totalSales
+FROM employees emp
+
+LEFT JOIN customers c
+ON emp.EmployeeId=c.SupportRepid
+
+JOIN invoices inv
+ON c.CustomerId=inv.CustomerId
+
+GROUP BY agentname
+;
+
+##14. Which sales agent made the most dollars in sales in 2009?
+SELECT (emp.FirstName||" "||emp.LastName) AS agentname
+,ROUND(SUM(inv.Total),2) totalSales
+FROM employees emp
+
+LEFT JOIN customers c
+ON emp.EmployeeId=c.SupportRepid
+
+JOIN invoices inv
+ON c.CustomerId=inv.CustomerId
+
+WHERE inv.InvoiceDate LIKE '2009%'
+GROUP BY agentname
+ORDER BY totalSales DESC
+LIMIT 1
+;
+
+##15. Show a list of countries and their total bill.
+select BillingCountry country, ROUND(SUM(Total)) totalBill
+FROM invoices
+GROUP BY country
+ORDER BY totalBill DESC
+;
+
+##16. How many of each Genres are there in the dataset?
+SELECT g.Name Genre, COUNT(tr.Name) count
+FROM tracks tr
+
+LEFT JOIN genres g
+ON tr.GenreId=g.GenreID
+
+GROUP BY Genre
+ORDER BY count DESC
+;
+
+##17. What country has the most customers?
+SELECT Country, COUNT(CustomerId) CustomerCount
+FROM customers
+GROUP BY Country
+ORDER BY CustomerCount DESC
+LIMIT 1
+;
+
+##18. What cities in the U.S. are the customers from?
+SELECT City
+FROM Customers
+Where Country = "USA"
+;
+
+##19. How many playlists per Genre
+SELECT g.Name Genre
+, COUNT(pl.PlaylistId) playcount
+FROM genres g
+
+LEFT JOIN tracks tr
+ON g.GenreId=tr.GenreId
+
+JOIN playlist_track pl
+ON tr.TrackId=pl.TrackId
+
+GROUP BY Genre
+ORDER BY playcount DESC
+;
+
+##20. Show all artist that have more than 5 albums
+SELECT ar.Name Artist, COUNT(al.AlbumId) count
+FROM artists ar
+
+LEFT JOIN albums al
+ON ar.ArtistID=al.ArtistId
+
+GROUP BY Artist
+HAVING count>5
+;
